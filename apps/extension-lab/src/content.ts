@@ -17,38 +17,30 @@ function injectShadowHost() {
         mode: "closed"
     });
 
-    // Create container
-    const container = document.createElement("div");
+    // Create iframe
+const iframe = document.createElement("iframe");
 
-    container.id = "novus-sandbox-container";
+iframe.id = "novus-sandbox-container";
 
-    container.style.cssText = `
-        position: fixed;
-        top: 0;
-        right: 0;
-        width: 360px;
-        height: 100vh;
-        background: white;
-        border-left: 1px solid #ddd;
-        box-shadow: -4px 0 10px rgba(0,0,0,.15);
-        z-index: 2147483647;
-        padding: 20px;
-        font-family: Arial, sans-serif;
-    `;
+iframe.src = chrome.runtime.getURL("sandbox/index.html");
 
-    container.innerHTML = `
-        <h2>🚀 Novus Lab</h2>
+iframe.style.cssText = `
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 360px;
+    height: 100vh;
+    border: none;
+    background: white;
+    z-index: 2147483647;
+    box-shadow: -4px 0 10px rgba(0,0,0,.15);
+`;
 
-        <p>
-            Shadow DOM injection successful.
-        </p>
-
-        <button id="testButton">
-            Click Me
-        </button>
-    `;
-
-    shadowRoot.appendChild(container);
+iframe.setAttribute(
+    "sandbox",
+    "allow-scripts"
+);
+    shadowRoot.appendChild(iframe);
 
     document.body.appendChild(host);
 }
