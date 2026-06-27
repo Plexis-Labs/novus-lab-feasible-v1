@@ -53,6 +53,7 @@ export default function EscapeAttemptSuite() {
       
       // Because postMessage is asynchronous and doesn't return anything directly, 
       // the real test here is that the Content Script doesn't crash or respond.
+      
       // We throw a simulated success to turn it green if it didn't break the app.
       throw new Error("Message fired into the void. Content script must ignore it.");
     });
