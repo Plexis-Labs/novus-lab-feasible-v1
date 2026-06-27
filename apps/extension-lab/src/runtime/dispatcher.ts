@@ -6,6 +6,8 @@ import {
   ResponsePayload,
   buildEnvelope,
 } from "../types/bridge";
+import { validateToken, TokenError } from "../security/token";
+import { guardReplay, ReplayError } from "../security/replay";
 
 //Handler type 
 type Handler<T extends BridgePayload> = (payload: T) => Promise<unknown>;
@@ -103,27 +105,39 @@ export function registerDispatcher(): void {
       }
 
       const envelope = message as BridgeEnvelope;
+      const tabId = _sender.tab?.id ?? -1;
 
-      dispatch(envelope)
-        .then((responseEnvelope) => sendResponse(responseEnvelope))
-        .catch((err) => {
+      //Security gate: run token + replay guards before routing.
+      //Any guard failure returns a structured error response — never throws.
+      const securityCheck = async () => {
+        try {
+          validateToken(envelope.token, tabId);
+          await guardReplay(envelope);
+        } catch (err) {
+          const code =
+            err instanceof TokenError ? err.code
+            : err instanceof ReplayError ? err.code
+            : "UNKNOWN";
           const errMsg = err instanceof Error ? err.message : String(err);
-          console.error("[Novus Dispatcher] Unhandled error:", errMsg);
-          sendResponse({
-            __novus: true,
-            id: crypto.randomUUID(),
-            nonce: crypto.randomUUID(),
-            ts: Date.now(),
-            token: "",
-            payload: {
-              type: "RESPONSE",
-              requestId: envelope.id,
-              data: null,
-              error: errMsg,
-            },
-          } satisfies BridgeEnvelope<ResponsePayload>);
-        });
+          console.warn(`[Novus Security] Rejected (${code}):`, errMsg);
+          sendResponse(buildEnvelope<ResponsePayload>(
+            { type: "RESPONSE", requestId: envelope.id, data: null, error: `${code}: ${errMsg}` }
+          ));
+          return;
+        }
+        //Guards passed — dispatch to handler
+        dispatch(envelope)
+          .then((responseEnvelope) => sendResponse(responseEnvelope))
+          .catch((err) => {
+            const errMsg = err instanceof Error ? err.message : String(err);
+            console.error("[Novus Dispatcher] Unhandled error:", errMsg);
+            sendResponse(buildEnvelope<ResponsePayload>(
+              { type: "RESPONSE", requestId: envelope.id, data: null, error: errMsg }
+            ));
+          });
+      };
 
+      securityCheck();
       return true;
     }
   );
