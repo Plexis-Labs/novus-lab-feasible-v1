@@ -1,0 +1,1 @@
+console.log("✅ Novus Service Worker Initialized");
