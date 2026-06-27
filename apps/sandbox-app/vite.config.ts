@@ -1,12 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import path from "path";
 
 export default defineConfig({
   base: "./",
   plugins: [react()],
 
   build: {
-    outDir: "dist",
+    outDir: path.resolve(__dirname, "../extension-lab/sandbox"),
 
     emptyOutDir: true,
 
@@ -16,8 +17,8 @@ export default defineConfig({
       output: {
         entryFileNames: "assets/[name].js",
         chunkFileNames: "assets/[name].js",
-        assetFileNames: "assets/[name].[ext]"
-      }
-    }
-  }
+        assetFileNames: "assets/[name].[ext]",
+      },
+    },
+  },
 });
