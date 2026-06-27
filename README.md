@@ -107,6 +107,15 @@ pnpm --filter test-website dev
 apps/extension-lab
 ```
 
+## Running the Security Tests (Milestone B)
+
+To verify the integrity of the Chrome MV3 sandbox:
+1. Ensure the extension is loaded and the test-website is running.
+2. Navigate to `http://localhost:3000`.
+3. The injected **Novus Attack Suite** UI will appear on the right side of the screen.
+4. Click **EXECUTE ALL ATTACKS**.
+5. Verify that Chrome's security boundaries (Opaque Origin & Strict CSP) successfully block all escape attempts (`eval()`, `top.document`, etc.).
+
 ---
 
 ## Current Progress
@@ -114,7 +123,7 @@ apps/extension-lab
 ### Phase -1
 
 * ✅ Milestone A – Chrome Platform Feasibility
-* ✅ Milestone B – Sandbox Architecture (B001–B003)
+* ✅ Milestone B – Sandbox Architecture (B001–B006)
 * ⏳ Milestone C – Typed Bridge Prototype
 * ⏳ Milestone D – Lifecycle Validation
 * ⏳ Milestone E – Security Validation
@@ -141,6 +150,6 @@ The next milestone introduces a secure, typed communication bridge between the s
 PHASE -1:
 
 - ✅ Milestone A – Chrome Platform Feasibility
-- ⏳ Milestone B – Iframe Sandbox
+- ✅ Milestone B – Iframe Sandbox
 - ⏳ Milestone C – React UI
 - ⏳ Milestone D – Communication Layer

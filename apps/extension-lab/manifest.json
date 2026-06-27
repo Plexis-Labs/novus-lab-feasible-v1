@@ -38,15 +38,25 @@
     "default_path": "sidepanel.html"
   },
 
-  "web_accessible_resources": [
-  {
-    "resources": [
-      "sandbox/*"
-    ],
-    "matches": [
-      "http://localhost:3000/*",
-      "http://127.0.0.1:3000/*"
+  "sandbox": {
+    "pages": [
+      "sandbox/index.html"
     ]
-  }
-]
+  },
+
+  "content_security_policy": {
+    "sandbox": "sandbox allow-scripts allow-forms; script-src 'self'; child-src 'self';"
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "sandbox/*"
+      ],
+      "matches": [
+        "http://localhost:3000/*",
+        "http://127.0.0.1:3000/*"
+      ]
+    }
+  ]
 }

@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Novus } from './novus';
 import './App.css';
 
+// ============================================================================
+// MILESTONE C HELPER TYPES & COMPONENTS
+// ============================================================================
 type Gate = 'idle' | 'ok' | 'fail';
 type Status = { origin: Gate; token: Gate; nonce: Gate };
 
