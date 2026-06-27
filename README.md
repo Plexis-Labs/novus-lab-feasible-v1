@@ -135,3 +135,12 @@ apps/extension-lab
 ## Roadmap
 
 The next milestone introduces a secure, typed communication bridge between the sandboxed React application and the trusted extension runtime, followed by capability tokens, lifecycle management, and full security validation.
+## Project Status
+
+
+PHASE -1:
+
+- ✅ Milestone A – Chrome Platform Feasibility
+- ⏳ Milestone B – Iframe Sandbox
+- ⏳ Milestone C – React UI
+- ⏳ Milestone D – Communication Layer
