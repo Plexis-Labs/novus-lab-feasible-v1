@@ -26,12 +26,18 @@ export type TokenGrantPayload = {
   expiresAt: number;
 };
 
+/** Sent by the content-script to the SW to request a tab-bound token. */
+export type RequestTokenPayload = {
+  type: "REQUEST_TOKEN";
+};
+
 /** Discriminated union of all legal payload shapes. */
 export type BridgePayload =
   | GetDataPayload
   | PingPayload
   | ResponsePayload
-  | TokenGrantPayload;
+  | TokenGrantPayload
+  | RequestTokenPayload;
 
 //Envelope
 export type BridgeEnvelope<T extends BridgePayload = BridgePayload> = {

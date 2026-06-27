@@ -3,10 +3,12 @@ import {
   BridgePayload,
   GetDataPayload,
   PingPayload,
+  RequestTokenPayload,
   ResponsePayload,
+  TokenGrantPayload,
   buildEnvelope,
 } from "../types/bridge";
-import { validateToken, TokenError } from "../security/token";
+import { validateToken, issueToken, TokenError } from "../security/token";
 import { guardReplay, ReplayError } from "../security/replay";
 
 //Handler type 
@@ -47,6 +49,7 @@ const handlers: Partial<Record<BridgePayload["type"], Handler<any>>> = {
   GET_DATA: handleGetData,
   PING: handlePing,
   // RESPONSE and TOKEN_GRANT are outbound-only — no inbound handler needed.
+  // REQUEST_TOKEN is handled inline in registerDispatcher (needs sender tabId).
 };
 
 //Error class
@@ -107,8 +110,30 @@ export function registerDispatcher(): void {
       const envelope = message as BridgeEnvelope;
       const tabId = _sender.tab?.id ?? -1;
 
-      //Security gate: run token + replay guards before routing.
-      //Any guard failure returns a structured error response — never throws.
+      // ── REQUEST_TOKEN ────────────────────────────────────────────────────
+      // Handled BEFORE the security gate because no token exists yet.
+      // The SW issues a fresh token bound to the real sender tabId and
+      // returns it as a TOKEN_GRANT envelope.
+      if (envelope.payload.type === "REQUEST_TOKEN") {
+        issueToken(tabId).then(({ token, expiresAt }) => {
+          sendResponse(
+            buildEnvelope<TokenGrantPayload>({ type: "TOKEN_GRANT", token, expiresAt })
+          );
+        }).catch((err) => {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          console.error("[Novus Dispatcher] Failed to issue token:", errMsg);
+          sendResponse(
+            buildEnvelope<ResponsePayload>({
+              type: "RESPONSE", requestId: envelope.id, data: null, error: errMsg,
+            })
+          );
+        });
+        return true; // keep channel open for async sendResponse
+      }
+
+      // ── Security gate ────────────────────────────────────────────────────
+      // Run token + replay guards before routing all other message types.
+      // Any guard failure returns a structured error response — never throws.
       const securityCheck = async () => {
         try {
           validateToken(envelope.token, tabId);

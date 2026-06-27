@@ -15,13 +15,6 @@ function isNovusEnvelope(data: unknown): boolean {
   );
 }
 
-function buildToken(tabId: number): { token: string; expiresAt: number } {
-  const iat = Date.now();
-  const exp = iat + 60_000;
-  const json = JSON.stringify({ sub: tabId, iat, exp });
-  const token = btoa(json).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  return { token, expiresAt: exp };
-}
 
 function injectShadowHost() {
   console.log("Checking for existing novus-lab-host element...");
@@ -48,18 +41,25 @@ function injectShadowHost() {
   mountedIframe = iframe;
 
   iframe.addEventListener("load", () => {
-    const tabId = chrome.devtools?.inspectedWindow?.tabId ?? 0;
-    const { token, expiresAt } = buildToken(tabId);
-    const grant = {
+    // Ask the SW to issue a token bound to the real sender tabId.
+    // The SW receives this via onMessage where _sender.tab.id is correct.
+    const requestTokenEnvelope = {
       __novus: true,
       id: crypto.randomUUID(),
       nonce: crypto.randomUUID(),
       ts: Date.now(),
       token: "",
-      payload: { type: "TOKEN_GRANT", token, expiresAt },
+      payload: { type: "REQUEST_TOKEN" },
     };
-    iframe.contentWindow?.postMessage(grant, "*");
-    console.log("[Novus Bridge] TOKEN_GRANT sent to SDK.");
+    chrome.runtime.sendMessage(requestTokenEnvelope, (response: unknown) => {
+      if (chrome.runtime.lastError) {
+        console.error("[Novus Bridge] TOKEN_REQUEST failed:", chrome.runtime.lastError.message);
+        return;
+      }
+      // SW returns a TOKEN_GRANT envelope — forward it straight to the iframe.
+      iframe.contentWindow?.postMessage(response, "*");
+      console.log("[Novus Bridge] TOKEN_GRANT forwarded to SDK.");
+    });
   });
 
   shadowRoot.appendChild(iframe);
