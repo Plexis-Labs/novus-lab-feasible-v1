@@ -36,5 +36,17 @@
 
   "side_panel": {
     "default_path": "sidepanel.html"
+  },
+
+  "web_accessible_resources": [
+  {
+    "resources": [
+      "sandbox/*"
+    ],
+    "matches": [
+      "http://localhost:3000/*",
+      "http://127.0.0.1:3000/*"
+    ]
   }
+]
 }
