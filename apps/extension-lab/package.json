@@ -5,15 +5,16 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build" : "node build.js"
+    "build": "node build.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "devDependencies": {
+    "@types/chrome": "^0.2.0",
+    "@types/node": "^26.0.1",
     "esbuild": "^0.28.1",
     "typescript": "^6.0.3"
   }
- 
 }
