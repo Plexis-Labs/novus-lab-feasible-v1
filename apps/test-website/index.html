@@ -2,14 +2,102 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Novus Test Website</title>
+    <title>Novus Test Website (SPA)</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            padding: 40px;
+            background-color: #f6f8fa;
+            color: #24292f;
+        }
+        nav {
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #d0d7de;
+        }
+        nav a {
+            margin-right: 20px;
+            color: #0969da;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 6px;
+        }
+        nav a:hover {
+            background-color: #ddf4ff;
+            text-decoration: underline;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 6px;
+            border: 1px solid #d0d7de;
+        }
+    </style>
 </head>
 <body>
 
-<div id="root">
-    <h1>Fake GitHub Pull Request</h1>
-    <p>This page is used for testing the Chrome extension.</p>
-</div>
+    <nav id="navbar">
+        <a href="/" class="spa-link">🏠 Home</a>
+        <a href="/pulls/1" class="spa-link">🔧 PR #1</a>
+        <a href="/pulls/2" class="spa-link">🛡️ PR #2 (Security)</a>
+        <a href="/settings" class="spa-link">⚙️ Settings</a>
+    </nav>
+
+    <div class="container" id="root">
+        <h1 id="page-title">Fake GitHub Dashboard</h1>
+        <p id="page-desc">This page is used for testing the Novus Chrome extension.</p>
+    </div>
+
+    <script>
+        // =========================================================
+        // FAKE SPA ROUTER LOGIC
+        // =========================================================
+        
+        // 1. Intercept all clicks on our special SPA links
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('.spa-link')) {
+                e.preventDefault(); // CRITICAL: Stop the browser from hard-reloading!
+                
+                const url = e.target.getAttribute('href');
+
+                // CRITICAL: Change the URL natively. This is what the Novus Service Worker detects!
+                window.history.pushState({}, '', url);
+
+                // Update the UI so we visually know it worked
+                updateUI(url);
+            }
+        });
+
+        // 2. Handle the browser Back/Forward buttons natively
+        window.addEventListener('popstate', () => {
+            updateUI(window.location.pathname);
+        });
+
+        // 3. Swap the DOM content based on the URL
+        function updateUI(path) {
+            const title = document.getElementById('page-title');
+            const desc = document.getElementById('page-desc');
+
+            if (path === '/') {
+                title.textContent = 'Fake GitHub Dashboard';
+                desc.textContent = 'Welcome to the dashboard. Click a PR to trigger a route change.';
+            } else if (path === '/pulls/1') {
+                title.textContent = 'PR #1: Fix the Sandbox Epochs';
+                desc.textContent = 'User wants to merge 3 commits into main. (Milestone D Test)';
+            } else if (path === '/pulls/2') {
+                title.textContent = 'PR #2: Add Security Bridge';
+                desc.textContent = 'Milestone C implementation validation.';
+            } else if (path === '/settings') {
+                title.textContent = 'Repository Settings';
+                desc.textContent = 'Manage your fake repository settings here.';
+            } else {
+                title.textContent = '404 Not Found';
+                desc.textContent = 'This route does not exist.';
+            }
+        }
+    </script>
 
 </body>
 </html>
