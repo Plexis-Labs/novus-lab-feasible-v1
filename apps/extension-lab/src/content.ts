@@ -1,6 +1,15 @@
 console.log("✅ Novus Content Script Loaded");
 
+// GLOBALS & STATE
+
 let mountedIframe: HTMLIFrameElement | null = null;
+let currentEpoch = Date.now();
+let currentRoute = window.location.href;
+
+console.log(`[Content] Initializing Novus Epoch: ${currentEpoch} on ${currentRoute}`);
+
+
+// MILESTONE C: SECURITY BRIDGE HELPERS
 
 function isAuthorizedSource(event: MessageEvent): boolean {
   if (!mountedIframe) return false;
@@ -16,11 +25,24 @@ function isNovusEnvelope(data: unknown): boolean {
 }
 
 
+// MILESTONE D: TEARDOWN SEQUENCE (P-1-D005)
+
+function teardownShadowHost() {
+  const existingHost = document.getElementById("novus-lab-host");
+  if (existingHost) {
+    console.log("[Content] SPA Nav Detected: Destroying old sandbox iframe...");
+    existingHost.remove(); // Physically vaporizes the iframe and all its tokens
+    mountedIframe = null;
+  }
+}
+
+// MILESTONE B & C: UI INJECTION & MESSAGE ROUTING
+
 function injectShadowHost() {
   console.log("Checking for existing novus-lab-host element...");
   if (document.getElementById("novus-lab-host")) return;
 
-  console.log("Injecting novus-lab-host element...");
+  console.log("Injecting fresh novus-lab-host element...");
   const host = document.createElement("div");
   host.id = "novus-lab-host";
 
@@ -33,16 +55,17 @@ function injectShadowHost() {
   iframe.style.cssText = `
     position: fixed; top: 0; right: 0;
     width: 360px; height: 100vh;
-    border: none; background: white;
+    border: none; background: #0f172a;
     z-index: 2147483647;
     box-shadow: -4px 0 10px rgba(0,0,0,.15);
   `;
 
   mountedIframe = iframe;
 
+  // Track the exact epoch this specific iframe instance was born in
+  const iframeEpoch = currentEpoch;
+
   iframe.addEventListener("load", () => {
-    // Ask the SW to issue a token bound to the real sender tabId.
-    // The SW receives this via onMessage where _sender.tab.id is correct.
     const requestTokenEnvelope = {
       __novus: true,
       id: crypto.randomUUID(),
@@ -56,7 +79,6 @@ function injectShadowHost() {
         console.error("[Novus Bridge] TOKEN_REQUEST failed:", chrome.runtime.lastError.message);
         return;
       }
-      // SW returns a TOKEN_GRANT envelope — forward it straight to the iframe.
       iframe.contentWindow?.postMessage(response, "*");
       console.log("[Novus Bridge] TOKEN_GRANT forwarded to SDK.");
     });
@@ -68,6 +90,12 @@ function injectShadowHost() {
   window.addEventListener("message", (event: MessageEvent) => {
     if (!isAuthorizedSource(event)) return;
     if (!isNovusEnvelope(event.data)) return;
+
+    // HARD SECURITY LAYER: If this iframe tries to talk but the global epoch moved on, kill it.
+    if (iframeEpoch !== currentEpoch) {
+      console.error(`[Security] Blocked message from a zombie iframe context.`);
+      return;
+    }
 
     const envelope = event.data;
 
@@ -86,4 +114,22 @@ function injectShadowHost() {
   });
 }
 
+
+// MILESTONE D: ROUTE INTERCEPTOR
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "NOVUS_ROUTE_CHANGED") {
+    // 1. Update global tracking metrics
+    currentRoute = message.url;
+    currentEpoch = message.epoch;
+    
+    console.log(`[Content] 🔄 Route Swapped to: ${currentRoute}`);
+    
+    // 2. Physical lifecycle management (P-1-D005)
+    teardownShadowHost();
+    injectShadowHost();
+  }
+});
+
+// Initialize the UI on first load
 injectShadowHost();
