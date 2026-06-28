@@ -124,7 +124,7 @@ pnpm --filter extension-lab build
 ## Start the React Sandbox
 
 ```bash
-pnpm --filter sandbox-app dev
+pnpm --filter sandbox-app watch
 ```
 
 ---
