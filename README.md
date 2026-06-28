@@ -149,6 +149,15 @@ pnpm --filter test-website dev
 apps/extension-lab
 ```
 
+## Running the Security Tests (Milestone B)
+
+To verify the integrity of the Chrome MV3 sandbox:
+1. Ensure the extension is loaded and the test-website is running.
+2. Navigate to `http://localhost:3000`.
+3. The injected **Novus Attack Suite** UI will appear on the right side of the screen.
+4. Click **EXECUTE ALL ATTACKS**.
+5. Verify that Chrome's security boundaries (Opaque Origin & Strict CSP) successfully block all escape attempts (`eval()`, `top.document`, etc.).
+
 ---
 
 # Security Validation
