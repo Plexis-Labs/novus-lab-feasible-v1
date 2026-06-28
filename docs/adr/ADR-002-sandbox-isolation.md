@@ -1,6 +1,4 @@
-Perfect. Next is **ADR-002**, which documents one of the most important decisions in Novus: **why the UI runs inside a sandboxed iframe mounted inside a Closed Shadow DOM**.
 
----
 
 # ADR-002: Sandboxed iframe & Closed Shadow DOM
 
