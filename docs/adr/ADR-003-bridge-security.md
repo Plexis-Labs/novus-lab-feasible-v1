@@ -2,7 +2,7 @@
 
 **Status:** Accepted
 
-**Date:** YYYY-MM-DD
+**Date:** 2026-06-28
 
 **Phase:** Phase -1 – Sandbox Feasibility Spike
 

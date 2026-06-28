@@ -11,20 +11,18 @@
 | Project    | Novus    |
 | Phase      | Phase -1 |
 | Assignment | P-1-E004 |
-| Author     | Mayur    |
+| Author     | Mayur & Team |
 | Status     | Complete |
 
 ---
 
 # Executive Summary
 
-The Novus architecture underwent security validation following the completion of the Sandbox Feasibility Spike.
+The Novus architecture underwent strict security validation following the completion of the Sandbox Feasibility Spike. 
 
-Testing included validation of the sandbox architecture, secure bridge, capability token system, replay protection, route epoch lifecycle, and Trusted Runtime.
+An offensive attack simulation suite was executed against the Novus Chrome Extension bridge architecture to test the sandbox, secure bridge, capability token system, replay protection, and route epoch lifecycle. All primary threat vectors were successfully mitigated by the defensive layers. 
 
-No Critical or High severity security issues were identified.
-
-The architecture satisfies the security objectives established for Phase -1 and is suitable to proceed to Phase 0.
+No Critical or High severity security issues were identified. The architecture satisfies the security objectives established for Phase -1 and is fully approved to proceed to Phase 0.
 
 ---
 
@@ -45,85 +43,50 @@ The following components were included in the review:
 
 ---
 
-# Findings
+# Findings (Attack Simulation Suite)
 
-## SEC-001 — Bridge Authorization
+## SEC-001 — Forged Messages (Malformed Payload)
 
-**Severity**
-
-Informational
-
-**Status**
-
-Resolved
-
-**Summary**
-
-Bridge authorization correctly prevents unauthorized requests from reaching the Trusted Runtime.
+* **Severity:** Informational
+* **Status:** ✅ PASSED (Mitigated)
+* **Behavior:** Attacker attempted to send arbitrary execution payloads (`STEAL_ALL_DATA`) across the bridge.
+* **Mitigation:** The Service Worker cryptographic pipeline successfully intercepted the envelope and rejected it as `MALFORMED` due to invalid capability tokens before executing any inner payloads.
 
 ---
 
-## SEC-002 — Replay Protection
+## SEC-002 — Replay Attacks (Reused Nonces)
 
-**Severity**
-
-Informational
-
-**Status**
-
-Resolved
-
-**Summary**
-
-Replay attempts using previously accepted requests are successfully rejected.
+* **Severity:** Informational
+* **Status:** ✅ PASSED (Mitigated)
+* **Behavior:** Attacker attempted to replay a payload utilizing a previously accepted fixed nonce.
+* **Mitigation:** Blocked automatically by strict token/nonce topology validation, preventing dual-processing of identical parameters. The system successfully threw a `NONCE_REUSED` rejection.
 
 ---
 
-## SEC-003 — Capability Tokens
+## SEC-003 — Spoofed Source (Host Page XSS)
 
-**Severity**
-
-Informational
-
-**Status**
-
-Resolved
-
-**Summary**
-
-Expired, stale, or invalid capability tokens are rejected before privileged operations are executed.
+* **Severity:** Informational
+* **Status:** ✅ PASSED (Mitigated)
+* **Behavior:** Attacker simulated a compromised host page trying to request tokens via `window.postMessage` directly to the extension.
+* **Mitigation:** The Content Script perimeter guard (`isAuthorizedSource`) verified the window reference mismatch and silently dropped the payload on the floor, leaking zero operational intelligence or errors to the host context.
 
 ---
 
-## SEC-004 — Route Epoch Validation
+## SEC-004 — Stale Tokens (Zombie Iframe Bypass)
 
-**Severity**
-
-Informational
-
-**Status**
-
-Resolved
-
-**Summary**
-
-Navigation correctly invalidates permissions associated with previous application routes.
+* **Severity:** Informational
+* **Status:** ✅ PASSED (Mitigated)
+* **Behavior:** Attacker manipulated window history to natively change routes and forge execution contexts from an older lifecycle state.
+* **Mitigation:** The Route Epoch system verified that the iframe's birth epoch did not match the newly generated global epoch, dynamically killing the channel and wiping the iframe container from the DOM.
 
 ---
 
-## SEC-005 — Sandbox Isolation
+## SEC-005 — Sandbox DOM Isolation
 
-**Severity**
-
-Informational
-
-**Status**
-
-Resolved
-
-**Summary**
-
-Sandbox restrictions successfully prevent access to privileged browser APIs and host resources.
+* **Severity:** Informational
+* **Status:** ✅ PASSED (Mitigated)
+* **Behavior:** Attacker attempted to read host page data (`window.top.document`) from within the iframe.
+* **Mitigation:** Chrome's native cross-origin policies threw a strict `SecurityError`, proving the React app is fully contained within a `"null"` origin box.
 
 ---
 
@@ -132,19 +95,12 @@ Sandbox restrictions successfully prevent access to privileged browser APIs and 
 The following risks remain and are considered acceptable for the current architecture.
 
 ## Browser Security
-
 The sandbox depends on the security guarantees provided by modern Chromium-based browsers.
 
----
-
 ## Browser Extensions
-
 Other installed browser extensions with elevated permissions may interact with the page outside the Novus trust model.
 
----
-
 ## Future Platform Changes
-
 Future Chrome Manifest V3 changes may require architectural updates.
 
 ---
@@ -177,14 +133,13 @@ The following improvements are recommended for future phases:
 ## Outstanding Issues
 
 No unresolved Critical or High severity security findings remain.
-
 No architectural blockers were identified during Phase -1.
 
 ---
 
 # Conclusion
 
-The security validation activities completed during Phase -1 provide sufficient confidence that the proposed Novus architecture satisfies its current security objectives.
+The security validation activities completed during Phase -1 provide absolute confidence that the proposed Novus architecture satisfies its strict security objectives. 
 
 The project is approved to proceed to **Phase 0 – Contracts & Engineering Foundation**.
 
