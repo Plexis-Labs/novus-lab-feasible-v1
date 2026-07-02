@@ -1,0 +1,75 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Extension",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9333,
+      "pathMapping": {
+        "/": "${workspaceFolder}/apps/extension-lab/",
+        "/content": "${workspaceFolder}/apps/extension-lab/src/"
+      },
+      "sourceMapPathOverrides": {
+        "webpack:///src/*": "${workspaceFolder}/apps/extension-lab/src/*"
+      }
+    },
+    {
+      "name": "Service Worker",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9334,
+      "pathMapping": {
+        "/": "${workspaceFolder}/apps/extension-lab/",
+        "/src": "${workspaceFolder}/apps/extension-lab/src/"
+      }
+    },
+    {
+      "name": "Sandbox App (Dev)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/apps/sandbox-app/src",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "vite:///*": "${webRoot}/*"
+      }
+    },
+    {
+      "name": "Unit Tests (Vitest)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "test:ui"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Test File (Vitest)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["exec", "vitest", "run", "${file}"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Playwright Tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["exec", "playwright", "test"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack (Extension + Sandbox)",
+      "configurations": ["Extension", "Service Worker", "Sandbox App (Dev)"]
+    }
+  ]
+}
